@@ -522,12 +522,18 @@ mod win {
                             i_group: 0,
                         };
                         self.write(im.as_ptr(), &item)?;
-                        SendMessageW(
+                        let copied = SendMessageW(
                             self.hwnd,
                             LVM_GETITEMTEXTW,
                             i as usize,
                             im.as_ptr() as Lparam,
                         );
+                        if copied <= 0 {
+                            return Err(io::Error::other(format!(
+                                "无法读取第 {} 个桌面图标的名称。",
+                                i + 1
+                            )));
+                        }
                         let mut chars = vec![0u16; 1024];
                         let mut got = 0usize;
                         if ReadProcessMemory(
