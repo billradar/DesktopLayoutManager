@@ -118,10 +118,6 @@ mod app {
         Some(String::from_utf16_lossy(&buffer[..len]))
     }
 
-    fn json_prop(key: &str, value: &serde_json::Value) -> String {
-        format!("\\"{}\\":{}", key, value)
-    }
-
     unsafe fn do_action(id: usize) {
         let result = match id {
             ID_REFRESH => request("read", None).map(|data| {
@@ -145,12 +141,16 @@ mod app {
                         return;
                     }
                     let extra = format!(r#""expectedSnapshot":{},"expectedMoves":{}"#, snapshot, moves);
-                    request("execute_fill", Some(&extra)).map(|data| format!("执行完成。\r\n自动备份：{}\r\n移动项目：{}", data["backupPath"].as_str().unwrap_or("(无)"), data["moves"].as_array().map_or(0, Vec::len)))
+                    request("execute_fill", Some(&extra)).map(|data| {
+                        LAST_BACKUP = data["backupPath"].as_str().map(str::to_owned);
+                        LAST_PREVIEW = None;
+                        format!("执行完成。\r\n自动备份：{}\r\n移动项目：{}", data["backupPath"].as_str().unwrap_or("(无)"), data["moves"].as_array().map_or(0, Vec::len))
+                    })
                 } else { Err("请先点击“预览补位”，确认移动计划后再执行。".into()) }
             }
             ID_SAVE => {
                 if let Some(path) = pick_path(true, false) {
-                    let extra = format!("\\"path\\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\\"\\"".into()));
+                    let extra = format!("\"path\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\"\"".into()));
                     request("save_snapshot", Some(&extra)).map(|data| {
                         LOADED_SNAPSHOT = serde_json::to_string(&data["snapshot"]).ok();
                         format!("快照已保存：{}\r\n项目数：{}", data["path"].as_str().unwrap_or(&path), data["snapshot"]["Icons"].as_array().map_or(0, Vec::len))
@@ -159,7 +159,7 @@ mod app {
             },
             ID_OPEN => {
                 if let Some(path) = pick_path(false, false) {
-                    let extra = format!("\\"path\\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\\"\\"".into()));
+                    let extra = format!("\"path\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\"\"".into()));
                     request("load_snapshot", Some(&extra)).map(|data| {
                         LOADED_SNAPSHOT = serde_json::to_string(&data["snapshot"]).ok();
                         format!("已打开快照：{}\r\n\r\n{}", data["path"].as_str().unwrap_or(&path), render_snapshot(&data))
@@ -168,7 +168,7 @@ mod app {
             },
             ID_RESTORE => {
                 if let Some(saved) = LOADED_SNAPSHOT.clone() {
-                    let preview_extra = format!("\\"savedSnapshot\\":{}", saved);
+                    let preview_extra = format!("\"savedSnapshot\":{}", saved);
                     request("preview_restore", Some(&preview_extra)).and_then(|plan| {
                         let moves = plan["moves"].as_array().map_or(0, Vec::len);
                         if moves == 0 { return Ok(format!("无需恢复。跳过项目：{}", serde_json::to_string_pretty(&plan["skipped"]).unwrap_or_default())); }
@@ -176,7 +176,7 @@ mod app {
                         if MessageBoxW(0 as HWND, prompt.as_ptr(), wide("确认恢复布局").as_ptr(), MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) != IDYES {
                             return Ok("已取消恢复；桌面未移动。".into());
                         }
-                        let extra = format!("\\"savedSnapshot\\":{},\\"expectedSnapshot\\":{},\\"expectedMoves\\":{},\\"expectedSkipped\\":{}",
+                        let extra = format!("\"savedSnapshot\":{},\"expectedSnapshot\":{},\"expectedMoves\":{},\"expectedSkipped\":{}",
                             saved, plan["snapshot"], plan["moves"], plan["skipped"]);
                         request("execute_restore", Some(&extra)).map(|data| {
                             LAST_BACKUP = data["backupPath"].as_str().map(str::to_owned);
@@ -187,13 +187,13 @@ mod app {
             },
             ID_EXPORT => {
                 if let Some(path) = pick_path(true, true) {
-                    let extra = format!("\\"path\\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\\"\\"".into()));
+                    let extra = format!("\"path\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\"\"".into()));
                     request("export", Some(&extra)).map(|data| format!("已导出 {} 个项目：{}", data["count"].as_u64().unwrap_or(0), data["path"].as_str().unwrap_or(&path)))
                 } else { Ok("已取消导出。".into()) }
             },
             ID_UNDO => {
                 if let Some(path) = LAST_BACKUP.clone() {
-                    let extra = format!("\\"path\\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\\"\\"".into()));
+                    let extra = format!("\"path\":{}", serde_json::to_string(&path).unwrap_or_else(|_| "\"\"".into()));
                     request("preview_undo", Some(&extra)).and_then(|plan| {
                         let moves = plan["moves"].as_array().map_or(0, Vec::len);
                         if moves == 0 { return Ok("没有可撤销的移动。".into()); }
@@ -201,7 +201,7 @@ mod app {
                         if MessageBoxW(0 as HWND, prompt.as_ptr(), wide("确认撤销").as_ptr(), MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) != IDYES {
                             return Ok("已取消撤销；桌面未移动。".into());
                         }
-                        let extra = format!("\\"savedSnapshot\\":{},\\"expectedSnapshot\\":{},\\"expectedMoves\\":{},\\"expectedSkipped\\":{}",
+                        let extra = format!("\"savedSnapshot\":{},\"expectedSnapshot\":{},\"expectedMoves\":{},\"expectedSkipped\":{}",
                             plan["savedSnapshot"], plan["snapshot"], plan["moves"], plan["skipped"]);
                         request("execute_undo", Some(&extra)).map(|data| format!("撤销完成。\r\n恢复项目：{}", data["moves"].as_array().map_or(0, Vec::len)))
                     })
