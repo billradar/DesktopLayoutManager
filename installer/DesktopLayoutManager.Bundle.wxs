@@ -116,17 +116,6 @@
           Vital="yes"
           PerMachine="yes" />
 
-      <!-- Microsoft documents this installer as the supported runtime detector/deployer:
-           it checks all required MSIX packages and skips deployment when they are present. -->
-      <ExePackage
-          Id="WindowsAppRuntimeX64"
-          DisplayName="Windows App SDK Runtime 2.5.1 (x64)"
-          SourceFile="!(bindpath.payloads)\WindowsAppRuntimeInstall-x64.exe"
-          InstallArguments="--quiet"
-          Permanent="yes"
-          Vital="yes"
-          PerMachine="yes" />
-
       <MsiPackage
           Id="DesktopLayoutManagerMsi"
           DisplayName="Desktop Layout Manager"
