@@ -228,11 +228,11 @@ mod app {
                 for (i, (id, label)) in buttons.iter().enumerate() {
                     let title = wide(label);
                     CreateWindowExW(0, wide("BUTTON").as_ptr(), title.as_ptr(),
-                        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 12 + (i as i32) * 122, 12, 112, 30,
+                        WS_CHILD | WS_VISIBLE | (BS_PUSHBUTTON as u32), 12 + (i as i32) * 122, 12, 112, 30,
                         hwnd, *id as _, GetModuleHandleW(null_mut()), null_mut());
                 }
                 OUTPUT = CreateWindowExW(WS_EX_CLIENTEDGE, wide("EDIT").as_ptr(), wide("正在初始化原生 Win32 界面……").as_ptr(),
-                    WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
+                    WS_CHILD | WS_VISIBLE | WS_VSCROLL | (ES_MULTILINE as u32) | (ES_AUTOVSCROLL as u32) | (ES_READONLY as u32),
                     12, 54, 1110, 650, hwnd, ID_OUTPUT as _, GetModuleHandleW(null_mut()), null_mut());
                 let font = GetStockObject(DEFAULT_GUI_FONT);
                 SendMessageW(OUTPUT, WM_SETFONT, font as usize, 1);
@@ -277,7 +277,6 @@ mod app {
                 0 as HWND, 0 as _, instance, null_mut());
             if hwnd.is_null() { return; }
             ShowWindow(hwnd, SW_SHOW);
-            UpdateWindow(hwnd);
             let mut msg: MSG = zeroed();
             while GetMessageW(&mut msg, 0 as HWND, 0, 0) > 0 {
                 TranslateMessage(&msg);
