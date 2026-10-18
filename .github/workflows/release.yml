@@ -87,13 +87,13 @@ jobs:
       - name: Publish GitHub Release and tag
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
           target_commitish: ${{ github.sha }}
-          name: Desktop Layout Manager ${{ env.RELEASE_TAG }}
+          name: Desktop Layout Manager ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            DesktopLayoutManager-${{ env.RELEASE_TAG }}-windows-x64.zip
+            DesktopLayoutManager-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}-windows-x64.zip
             target/release/DesktopLayoutManager.exe
             target/release/desktop_layout_manager.dll
             SHA256SUMS.txt
