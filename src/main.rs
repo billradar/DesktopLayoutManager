@@ -11,6 +11,7 @@ mod app {
         UI::WindowsAndMessaging::*,
     };
 
+    const COLOR_WINDOW_INDEX: i32 = 5;
     const ID_REFRESH: usize = 101;
     const ID_PREVIEW: usize = 102;
     const ID_EXECUTE: usize = 103;
@@ -266,7 +267,7 @@ mod app {
             wc.hInstance = instance;
             wc.hCursor = LoadCursorW(null_mut(), IDC_ARROW);
             wc.hIcon = LoadIconW(instance, 1usize as *const u16);
-            wc.hbrBackground = (COLOR_WINDOW + 1) as _;
+            wc.hbrBackground = (COLOR_WINDOW_INDEX + 1) as _;
             wc.lpszClassName = class_name.as_ptr();
             if RegisterClassW(&wc) == 0 {
                 MessageBoxW(0 as HWND, wide("无法注册 Win32 窗口类。").as_ptr(), wide("桌面布局管理器").as_ptr(), MB_ICONERROR);
