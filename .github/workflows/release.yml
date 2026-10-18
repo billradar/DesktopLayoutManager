@@ -48,41 +48,17 @@ jobs:
       - name: Build native Win32 app
         run: cargo build --release --bin DesktopLayoutManager --lib
 
-      - name: Package release assets
+      - name: Prepare release assets
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $stage = Join-Path $PWD 'release-stage'
-          New-Item -ItemType Directory -Force -Path $stage | Out-Null
-
           $exe = 'target/release/DesktopLayoutManager.exe'
-          $dll = 'target/release/desktop_layout_manager.dll'
-          foreach ($file in @($exe, $dll)) {
-            if (-not (Test-Path -LiteralPath $file)) {
-              throw "Required release output is missing: $file"
-            }
+          if (-not (Test-Path -LiteralPath $exe)) {
+            throw "Required release output is missing: $exe"
           }
 
-          Copy-Item -LiteralPath $exe -Destination $stage
-          Copy-Item -LiteralPath $dll -Destination $stage
-          @(
-            'Desktop Layout Manager - native Win32 build',
-            '',
-            'Architecture: Windows x64',
-            'Runtime: native Win32 UI + Rust core DLL',
-            '',
-            'Keep DesktopLayoutManager.exe and desktop_layout_manager.dll in the same directory.'
-          ) | Set-Content -LiteralPath (Join-Path $stage 'README.txt') -Encoding utf8
-
-          $zip = "DesktopLayoutManager-$env:RELEASE_TAG-windows-x64.zip"
-          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip -Force
-
-          $hashes = @()
-          foreach ($file in @($exe, $dll, $zip)) {
-            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
-            $hashes += "$hash  $(Split-Path -Leaf $file)"
-          }
-          $hashes | Set-Content -LiteralPath 'SHA256SUMS.txt' -Encoding ascii
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $exe).Hash.ToLowerInvariant()
+          "$hash  DesktopLayoutManager.exe" | Set-Content -LiteralPath 'SHA256SUMS.txt' -Encoding ascii
 
       - name: Publish GitHub Release and tag
         uses: softprops/action-gh-release@v2
@@ -93,7 +69,5 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            DesktopLayoutManager-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}-windows-x64.zip
             target/release/DesktopLayoutManager.exe
-            target/release/desktop_layout_manager.dll
             SHA256SUMS.txt
