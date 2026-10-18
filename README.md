@@ -12,6 +12,13 @@
 
 或运行 `build.cmd`。输出位于 `dist\DesktopLayoutManager.exe`，Rust 核心 DLL 位于同目录。应用图标通过资源编译阶段嵌入 EXE，不需要单独分发 ICO 文件。
 
+## CI/CD 发布
+
+- `.github/workflows/native-win32.yml`：对推送和 PR 执行 Rust 核心测试及 Windows x64 构建。
+- `.github/workflows/release.yml`：推送 `v*` tag 时自动构建并创建 GitHub Release；也可以在 GitHub Actions 中手动运行 **Release native Win32 app**，输入版本号（例如 `v0.1.0`）。
+- Release 附件包括 Windows x64 ZIP（EXE、DLL 和说明文件）、独立 EXE、核心 DLL 与 `SHA256SUMS.txt`。
+- EXE 需要与 `desktop_layout_manager.dll` 放在同一目录；该发布流程目前提供 ZIP 包，不生成 MSI 安装包。
+
 ## 当前原生 Win32 迁移状态
 
 - 已加入 Win32 窗口、原生按钮和只读多行输出区。
