@@ -1,27 +1,29 @@
 param([string]$OutputDirectory)
 
 $ErrorActionPreference = 'Stop'
-$project = Join-Path $PSScriptRoot 'ui\DesktopLayoutManager.WinUI.csproj'
+$root = $PSScriptRoot
 $dist = if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
-    Join-Path $PSScriptRoot 'dist'
+    Join-Path $root 'dist'
 } else {
     [IO.Path]::GetFullPath($OutputDirectory)
 }
-$icon = Join-Path $PSScriptRoot 'assets\DesktopLayoutManager.ico'
 
 if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
     throw 'Rust/Cargo was not found. Install the stable Rust toolchain and reopen PowerShell.'
 }
-if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    throw 'The .NET SDK was not found. Install the .NET SDK required by this project and reopen PowerShell.'
+if (-not (Test-Path -LiteralPath (Join-Path $root 'assets\DesktopLayoutManager.ico'))) {
+    throw 'Application icon assets\DesktopLayoutManager.ico is missing.'
 }
 
-New-Item -ItemType Directory -Force -Path $dist | Out-Null
-& dotnet publish $project -c Release -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=false -o $dist
-if ($LASTEXITCODE -ne 0) { throw 'WinUI 3 publish failed.' }
-if (-not (Test-Path -LiteralPath (Join-Path $dist 'DesktopLayoutManager.exe'))) {
-    throw 'The WinUI 3 executable was not produced.'
+Push-Location $root
+try {
+    cargo build --release --bin DesktopLayoutManager --lib
+    if ($LASTEXITCODE -ne 0) { throw 'Native Win32 build failed.' }
+    New-Item -ItemType Directory -Force -Path $dist | Out-Null
+    Copy-Item (Join-Path $root 'target\release\DesktopLayoutManager.exe') $dist -Force
+    Copy-Item (Join-Path $root 'target\release\desktop_layout_manager.dll') $dist -Force
+    Write-Host "Build complete: $dist\DesktopLayoutManager.exe"
+    Write-Host 'The ICO is embedded in the EXE; the Rust core DLL is shipped beside it.'
+} finally {
+    Pop-Location
 }
-Copy-Item -LiteralPath $icon -Destination (Join-Path $dist 'DesktopLayoutManager.ico') -Force
-Write-Host "Build complete: $(Join-Path $dist 'DesktopLayoutManager.exe')"
-Write-Host 'The app includes the .NET runtime and prompts the user to acquire Windows App SDK Runtime if needed.'

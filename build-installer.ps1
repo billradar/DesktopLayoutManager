@@ -31,7 +31,7 @@ if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
     throw 'Rust/Cargo was not found. Install the stable Rust toolchain and reopen PowerShell.'
 }
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    throw 'The .NET SDK was not found. Install the .NET SDK required by this project and reopen PowerShell.'
+    throw 'The .NET SDK is required only to build the WiX installer. Install it and reopen PowerShell.'
 }
 
 New-Item -ItemType Directory -Force -Path $installerDir, $payloadDir | Out-Null
@@ -46,16 +46,10 @@ if (Test-Path -LiteralPath $publishDir) {
 }
 
 & (Join-Path $root 'build.ps1') -OutputDirectory $publishDir
-if ($LASTEXITCODE -ne 0) { throw 'The application publish failed.' }
+if ($LASTEXITCODE -ne 0) { throw 'The application build failed.' }
 
-$runtimeInstaller = Join-Path $payloadDir 'WindowsAppRuntimeInstall-x64.exe'
 $vcRedistInstaller = Join-Path $payloadDir 'vc_redist.x64.exe'
-Get-MicrosoftInstaller `
-    -Url 'https://download.microsoft.com/download/de664922-b046-432f-bb2a-54aec3c5f1f6/WindowsAppRuntimeInstall-x64.exe' `
-    -Path $runtimeInstaller
-Get-MicrosoftInstaller `
-    -Url 'https://aka.ms/vs/17/release/vc_redist.x64.exe' `
-    -Path $vcRedistInstaller
+Get-MicrosoftInstaller -Url 'https://aka.ms/vs/17/release/vc_redist.x64.exe' -Path $vcRedistInstaller
 $vcRedistVersion = [version](Get-Item -LiteralPath $vcRedistInstaller).VersionInfo.FileVersion
 $vcRedistDetectCondition = "VcRedistInstalledNumber = 1 AND (VcRedistMajorNumber > $($vcRedistVersion.Major) OR (VcRedistMajorNumber = $($vcRedistVersion.Major) AND (VcRedistMinorNumber > $($vcRedistVersion.Minor) OR (VcRedistMinorNumber = $($vcRedistVersion.Minor) AND (VcRedistBuildNumber > $($vcRedistVersion.Build) OR (VcRedistBuildNumber = $($vcRedistVersion.Build) AND VcRedistRevisionNumber >= $($vcRedistVersion.Revision)))))))"
 

@@ -79,6 +79,43 @@ fn default_backup_dir() -> PathBuf {
 fn timestamp() -> String {
     format!("{}", now_ms())
 }
+#[cfg(windows)]
+fn replace_file(source: &Path, destination: &Path) -> io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn MoveFileExW(existing_name: *const u16, new_name: *const u16, flags: u32) -> i32;
+    }
+
+    const MOVEFILE_REPLACE_EXISTING: u32 = 0x1;
+    const MOVEFILE_WRITE_THROUGH: u32 = 0x8;
+
+    let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
+    let destination_wide: Vec<u16> = destination
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    let result = unsafe {
+        MoveFileExW(
+            source_wide.as_ptr(),
+            destination_wide.as_ptr(),
+            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
+        )
+    };
+    if result == 0 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(not(windows))]
+fn replace_file(source: &Path, destination: &Path) -> io::Result<()> {
+    fs::rename(source, destination)
+}
+
 fn save_snapshot(path: &Path, snapshot: &Snapshot) -> io::Result<()> {
     if let Some(parent) = path.parent() {
         if !parent.as_os_str().is_empty() {
@@ -104,7 +141,7 @@ fn save_snapshot(path: &Path, snapshot: &Snapshot) -> io::Result<()> {
         file.write_all(&bytes)?;
         file.sync_all()?;
         drop(file);
-        fs::rename(&tmp, path)
+        replace_file(&tmp, path)
     })();
     if write_result.is_err() {
         let _ = fs::remove_file(&tmp);
@@ -485,12 +522,18 @@ mod win {
                             i_group: 0,
                         };
                         self.write(im.as_ptr(), &item)?;
-                        SendMessageW(
+                        let copied = SendMessageW(
                             self.hwnd,
                             LVM_GETITEMTEXTW,
                             i as usize,
                             im.as_ptr() as Lparam,
                         );
+                        if copied <= 0 {
+                            return Err(io::Error::other(format!(
+                                "无法读取第 {} 个桌面图标的名称。",
+                                i + 1
+                            )));
+                        }
                         let mut chars = vec![0u16; 1024];
                         let mut got = 0usize;
                         if ReadProcessMemory(

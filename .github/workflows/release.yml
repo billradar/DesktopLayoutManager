@@ -1,0 +1,99 @@
+name: Release native Win32 app
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to create, for example v0.1.0"
+        required: true
+        type: string
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish Windows x64 release
+    runs-on: windows-latest
+    steps:
+      - name: Validate release tag
+        shell: pwsh
+        env:
+          REQUESTED_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+        run: |
+          if ($env:REQUESTED_VERSION -notmatch '^v\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$') {
+            throw "Invalid release tag '$env:REQUESTED_VERSION'. Use vMAJOR.MINOR.PATCH, for example v0.1.0."
+          }
+          "RELEASE_TAG=$env:REQUESTED_VERSION" >> $env:GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref_name || github.sha }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Test Rust core
+        run: cargo test --lib
+
+      - name: Build native Win32 app
+        run: cargo build --release --bin DesktopLayoutManager --lib
+
+      - name: Package release assets
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = Join-Path $PWD 'release-stage'
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+
+          $exe = 'target/release/DesktopLayoutManager.exe'
+          $dll = 'target/release/desktop_layout_manager.dll'
+          foreach ($file in @($exe, $dll)) {
+            if (-not (Test-Path -LiteralPath $file)) {
+              throw "Required release output is missing: $file"
+            }
+          }
+
+          Copy-Item -LiteralPath $exe -Destination $stage
+          Copy-Item -LiteralPath $dll -Destination $stage
+          @(
+            'Desktop Layout Manager - native Win32 build',
+            '',
+            'Architecture: Windows x64',
+            'Runtime: native Win32 UI + Rust core DLL',
+            '',
+            'Keep DesktopLayoutManager.exe and desktop_layout_manager.dll in the same directory.'
+          ) | Set-Content -LiteralPath (Join-Path $stage 'README.txt') -Encoding utf8
+
+          $zip = "DesktopLayoutManager-$env:RELEASE_TAG-windows-x64.zip"
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip -Force
+
+          $hashes = @()
+          foreach ($file in @($exe, $dll, $zip)) {
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
+            $hashes += "$hash  $(Split-Path -Leaf $file)"
+          }
+          $hashes | Set-Content -LiteralPath 'SHA256SUMS.txt' -Encoding ascii
+
+      - name: Publish GitHub Release and tag
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: Desktop Layout Manager ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            DesktopLayoutManager-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}-windows-x64.zip
+            target/release/DesktopLayoutManager.exe
+            target/release/desktop_layout_manager.dll
+            SHA256SUMS.txt
