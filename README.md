@@ -1,50 +1,52 @@
 # Desktop Layout Manager
 
+English | [简体中文](README-zh.md)
+
 [![CI — Native Win32 build](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml/badge.svg?branch=native-win32-ui)](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml)
 [![CD — Release](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml/badge.svg)](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml)
 
-**Desktop Layout Manager** 是一款面向 Windows 的桌面图标布局管理工具，使用 Rust 核心和原生 Win32 界面，帮助你查看桌面图标布局、预览空位补齐方案，并在需要时保存和恢复布局。
+**Desktop Layout Manager** is a Windows desktop icon layout tool built with a Rust core and a native Win32 interface. It helps you inspect desktop icon positions, preview how empty spaces can be filled, and save or restore layouts when needed.
 
-> 当前原生 Win32 界面仍在迁移完善中。部分界面体验与旧版可能不同。
+> The native Win32 interface is still being migrated and refined, so some parts of the experience may differ from earlier versions.
 
-## 功能
+## Features
 
-- **查看桌面布局**：读取桌面图标及其位置。
-- **空位补齐**：预览整理方案，确认后执行图标补位。
-- **布局快照**：保存当前布局，并从快照恢复。
-- **撤销操作**：撤销最近一次补位操作。
-- **数据导出**：将桌面布局导出为 CSV。
-- **原生 Windows 界面**：采用 Win32 窗口、按钮和系统文件对话框。
-- **轻量技术栈**：界面与核心逻辑主要使用 Rust 实现。
+- **Inspect desktop layout** — read desktop icons and their positions.
+- **Fill empty spaces** — preview an arrangement and apply it when ready.
+- **Layout snapshots** — save the current layout and restore it later.
+- **Undo** — revert the most recent fill operation.
+- **Export data** — export desktop layout information to CSV.
+- **Native Windows interface** — Win32 windows, buttons, and system file dialogs.
+- **Rust-based implementation** — the interface and core logic are primarily written in Rust.
 
-## 下载与运行
+## Download and run
 
-请前往 [GitHub Actions](https://github.com/billradar/DesktopLayoutManager-rust/actions) 查看自动构建记录；正式版本发布后，可在 [Releases](https://github.com/billradar/DesktopLayoutManager-rust/releases) 获取对应文件。
+Visit [GitHub Actions](https://github.com/billradar/DesktopLayoutManager-rust/actions) for automated build artifacts. Once a version is published, downloads will be available on the [Releases](https://github.com/billradar/DesktopLayoutManager-rust/releases) page.
 
-Windows x64 发布包为 ZIP 格式。解压后，请将 `DesktopLayoutManager.exe` 与 `desktop_layout_manager.dll` 保持在同一目录，再运行 EXE。
+The Windows x64 release package is a ZIP archive. Extract it and keep `DesktopLayoutManager.exe` and `desktop_layout_manager.dll` in the same directory, then run the EXE.
 
-## 从源码构建
+## Build from source
 
-构建环境：Windows x64、Rust stable 工具链及 Windows SDK。
+Requirements: Windows x64, the Rust stable toolchain, and the Windows SDK.
 
-在项目根目录运行：
+From the project root, run:
 
 ```powershell
 .\build.ps1
 ```
 
-也可以运行 `build.cmd`。构建脚本会生成应用程序文件。
+You can also run `build.cmd`. The build script generates the application binaries.
 
-## CI / CD 状态
+## CI / CD status
 
-- **CI（持续集成）**：代码推送或相关 PR 触发 Windows x64 构建，并运行 Rust 核心测试。查看 [CI 工作流](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml)。
-- **CD（发布）**：推送以 `v` 开头的版本标签（例如 `v0.1.0`）会触发构建和 GitHub Release；也可在 Actions 页面手动运行发布工作流并填写版本号。查看 [Release 工作流](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml)。
-- **发布文件**：包含 Windows x64 ZIP 包、EXE、Rust 核心 DLL 和 SHA-256 校验文件。
+- **CI (continuous integration):** pushes and relevant pull requests trigger a Windows x64 build and Rust core tests. See the [CI workflow](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml).
+- **CD (release):** pushing a version tag beginning with `v` (for example, `v0.1.0`) triggers a build and GitHub Release. You can also start the release workflow manually from Actions and provide a version. See the [release workflow](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml).
+- **Release assets:** a Windows x64 ZIP package, EXE, Rust core DLL, and SHA-256 checksum file.
 
-## 项目状态
+## Project status
 
-项目正在从 WinUI 3 / XAML 界面迁移到原生 Win32 界面。当前已提供桌面读取、补位预览与执行、布局快照保存和恢复、撤销以及 CSV 导出等主要操作。列表区域仍在完善中。
+The project is migrating from a WinUI 3 / XAML interface to native Win32. Core workflows include reading desktop layout, previewing and applying space-filling, saving and restoring snapshots, undoing the last operation, and exporting CSV. The list area is still being refined.
 
-## 许可证
+## License
 
-本项目使用 MIT License，详见 [LICENSE](LICENSE)。
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
