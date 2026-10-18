@@ -265,6 +265,7 @@ mod app {
             wc.lpfnWndProc = Some(wnd_proc);
             wc.hInstance = instance;
             wc.hCursor = LoadCursorW(null_mut(), IDC_ARROW);
+            wc.hIcon = LoadIconW(instance, 1usize as *const u16);
             wc.hbrBackground = (COLOR_WINDOW + 1) as _;
             wc.lpszClassName = class_name.as_ptr();
             if RegisterClassW(&wc) == 0 {
