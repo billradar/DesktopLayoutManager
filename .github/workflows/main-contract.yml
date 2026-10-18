@@ -1,0 +1,55 @@
+name: Main Branch Contract
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: main-contract-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate pull request flow
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          test "$BASE_REF" = "main" || { echo "::error::Pull requests must target main."; exit 1; }
+          test "$HEAD_REF" != "main" || { echo "::error::Changes must come from a topic branch, not main."; exit 1; }
+          echo "PR flow contract passed: $HEAD_REF -> $BASE_REF"
+
+      - uses: actions/checkout@v4
+
+      - name: Verify branch and release contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f docs/MAIN_BRANCH_CONTRACT.md || { echo "::error::Main branch contract document is missing."; exit 1; }
+          test -f .github/workflows/native-win32.yml || { echo "::error::Native Win32 CI workflow is missing."; exit 1; }
+          test -f .github/workflows/release.yml || { echo "::error::Release workflow is missing."; exit 1; }
+
+          release_workflow=".github/workflows/release.yml"
+          grep -Fq 'target/release/DesktopLayoutManager.exe' "$release_workflow" || {
+            echo "::error::Release workflow must upload DesktopLayoutManager.exe."; exit 1;
+          }
+          grep -Fq 'SHA256SUMS.txt' "$release_workflow" || {
+            echo "::error::Release workflow must upload SHA256SUMS.txt."; exit 1;
+          }
+          if grep -Eq 'desktop_layout_manager\.dll|DesktopLayoutManager-.*windows-x64\.zip' "$release_workflow"; then
+            echo "::error::Release workflow must not upload the DLL or create/upload a custom application ZIP."
+            exit 1
+          fi
+
+          echo "Repository contract passed."

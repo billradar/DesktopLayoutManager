@@ -1,43 +1,52 @@
-# DesktopLayoutManager (Native Win32 + Rust)
+# Desktop Layout Manager
 
-桌面布局管理器正在从 WinUI 3 / XAML 迁移到原生 Win32 界面。桌面读取、快捷方式分类、补位规划、恢复、自动备份和失败回滚仍由现有 Rust 核心负责。
+English | [简体中文](README-zh.md)
 
-## 构建
+[![CI — Native Win32 build](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml/badge.svg?branch=native-win32-ui)](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml)
+[![CD — Release](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml/badge.svg)](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml)
 
-在 Windows x64 上安装 Rust stable 工具链与 Windows SDK（用于编译 Windows 资源），在项目根目录运行：
+**Desktop Layout Manager** is a Windows desktop icon layout tool built with a Rust core and a native Win32 interface. It helps you inspect desktop icon positions, preview how empty spaces can be filled, and save or restore layouts when needed.
+
+> The native Win32 interface is still being migrated and refined, so some parts of the experience may differ from earlier versions.
+
+## Features
+
+- **Inspect desktop layout** — read desktop icons and their positions.
+- **Fill empty spaces** — preview an arrangement and apply it when ready.
+- **Layout snapshots** — save the current layout and restore it later.
+- **Undo** — revert the most recent fill operation.
+- **Export data** — export desktop layout information to CSV.
+- **Native Windows interface** — Win32 windows, buttons, and system file dialogs.
+- **Rust-based implementation** — the interface and core logic are primarily written in Rust.
+
+## Download and run
+
+Visit [GitHub Actions](https://github.com/billradar/DesktopLayoutManager-rust/actions) for automated build artifacts. Once a version is published, downloads will be available on the [Releases](https://github.com/billradar/DesktopLayoutManager-rust/releases) page.
+
+The Windows x64 release provides `DesktopLayoutManager.exe` and `SHA256SUMS.txt` as release assets. GitHub also provides source code archives (ZIP and TAR.GZ) automatically. No separate application ZIP or DLL is attached.
+
+## Build from source
+
+Requirements: Windows x64, the Rust stable toolchain, and the Windows SDK.
+
+From the project root, run:
 
 ```powershell
 .\build.ps1
 ```
 
-或运行 `build.cmd`。输出位于 `dist\DesktopLayoutManager.exe`，Rust 核心 DLL 位于同目录。应用图标通过资源编译阶段嵌入 EXE，不需要单独分发 ICO 文件。
+You can also run `build.cmd`. The build script generates the application binaries.
 
-## CI/CD 发布
+## CI / CD status
 
-- `.github/workflows/native-win32.yml`：对推送和 PR 执行 Rust 核心测试及 Windows x64 构建。
-- `.github/workflows/release.yml`：推送 `v*` tag 时自动构建并创建 GitHub Release；也可以在 GitHub Actions 中手动运行 **Release native Win32 app**，输入版本号（例如 `v0.1.0`）。
-- Release 附件包括 Windows x64 ZIP（EXE、DLL 和说明文件）、独立 EXE、核心 DLL 与 `SHA256SUMS.txt`。
-- EXE 需要与 `desktop_layout_manager.dll` 放在同一目录；该发布流程目前提供 ZIP 包，不生成 MSI 安装包。
+- **CI (continuous integration):** pushes and relevant pull requests trigger a Windows x64 build and Rust core tests. See the [CI workflow](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml).
+- **CD (release):** pushing a version tag beginning with `v` (for example, `v0.1.0`) triggers a build and GitHub Release. You can also start the release workflow manually from Actions and provide a version. See the [release workflow](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml).
+- **Release assets:** `DesktopLayoutManager.exe` and `SHA256SUMS.txt`. Source code ZIP and TAR.GZ archives are provided automatically by GitHub.
 
-## 当前原生 Win32 迁移状态
+## Project status
 
-- 已加入 Win32 窗口、原生按钮和只读多行输出区。
-- 已接入桌面读取、补位预览与执行补位的 Rust 核心操作。
-- 已加入原生文件对话框，支持保存/打开快照、恢复布局、撤销最近一次补位以及 CSV 导出。
-- 补位执行要求先预览；核心会再次校验桌面快照与移动计划，并在执行前自动备份。
-- 当前列表仍使用原生多行文本控件，尚未替换为 ListView；迁移完成前不要把此分支视为功能等同于旧版的正式发布版本。
+The project is migrating from a WinUI 3 / XAML interface to native Win32. Core workflows include reading desktop layout, previewing and applying space-filling, saving and restoring snapshots, undoing the last operation, and exporting CSV. The list area is still being refined.
 
-## 安全约束
+## License
 
-- 仅移动能够可靠匹配的快捷方式；真实文件、文件夹、系统图标和未识别项目不会移动。
-- 无法可靠分类、推断网格或检测到多显示器时，补位会停止。
-- 确认执行前重新读取桌面并重算计划；桌面发生变化时取消操作。
-- 执行前自动备份；移动失败时尽量回滚。
-- 自动排列启用时不执行补位。
-
-## 项目结构
-
-- `src/main.rs`：原生 Win32 GUI。
-- `src/lib.rs`：Rust 桌面操作核心及 JSON C ABI。
-- `assets/DesktopLayoutManager.ico`：编译进 EXE 的应用图标源文件。
-- `build.rs`：Windows 资源编译步骤。
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
