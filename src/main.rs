@@ -103,6 +103,13 @@ mod app {
             }),
             ID_EXECUTE => {
                 if let Some((snapshot, moves)) = LAST_PREVIEW.clone() {
+                    let count = serde_json::from_str::<serde_json::Value>(&moves)
+                        .ok().and_then(|v| v.as_array().map(Vec::len)).unwrap_or(0);
+                    let prompt = wide(&format!("即将移动 {count} 个桌面快捷方式。执行前会自动备份；确认执行？"));
+                    if MessageBoxW(0 as HWND, prompt.as_ptr(), wide("确认执行补位").as_ptr(), MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) != IDYES {
+                        set_output("已取消操作；桌面未移动。");
+                        return;
+                    }
                     let extra = format!(r#""expectedSnapshot":{},"expectedMoves":{}"#, snapshot, moves);
                     request("execute_fill", Some(&extra)).map(|data| format!("执行完成。\r\n自动备份：{}\r\n移动项目：{}", data["backupPath"].as_str().unwrap_or("(无)"), data["moves"].as_array().map_or(0, Vec::len)))
                 } else { Err("请先点击“预览补位”，确认移动计划后再执行。".into()) }
