@@ -5,7 +5,7 @@ mod app {
     use std::{ffi::{c_char, CStr, CString}, mem::zeroed, ptr::null_mut};
     use windows_sys::Win32::{
         Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
-        Graphics::Gdi::DEFAULT_GUI_FONT,
+        Graphics::Gdi::{GetStockObject, DEFAULT_GUI_FONT},
         System::LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW},
         UI::WindowsAndMessaging::*,
     };
@@ -51,7 +51,7 @@ mod app {
     unsafe fn request(action: &str, extra: Option<&str>) -> Result<serde_json::Value, String> {
         let api = CORE.ok_or("Rust 核心尚未初始化。")?;
         let json = match extra {
-            Some(extra) => format!(r#"{{"action":"{}","{}"#, action, extra.trim_start_matches('{').trim_end_matches('}')),
+            Some(extra) => format!(r#"{{"action":"{}",{}}}"#, action, extra.trim_start_matches('{').trim_end_matches('}')),
             None => format!(r#"{{"action":"{}"}}"#, action),
         };
         let input = CString::new(json).map_err(|e| e.to_string())?;
@@ -104,7 +104,7 @@ mod app {
             ID_EXECUTE => {
                 if let Some((snapshot, moves)) = LAST_PREVIEW.clone() {
                     let extra = format!(r#""expectedSnapshot":{},"expectedMoves":{}"#, snapshot, moves);
-                    request("execute_fill", Some(&format!("{{{extra}}}")) .map(|data| format!("执行完成。\r\n自动备份：{}\r\n移动项目：{}", data["backupPath"].as_str().unwrap_or("(无)"), data["moves"].as_array().map_or(0, Vec::len)))
+                    request("execute_fill", Some(&extra)).map(|data| format!("执行完成。\r\n自动备份：{}\r\n移动项目：{}", data["backupPath"].as_str().unwrap_or("(无)"), data["moves"].as_array().map_or(0, Vec::len)))
                 } else { Err("请先点击“预览补位”，确认移动计划后再执行。".into()) }
             }
             ID_SAVE => Err("快照保存对话框正在迁移中；当前可先使用原有 CLI/界面版本保存布局。".into()),
