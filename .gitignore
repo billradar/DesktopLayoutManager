@@ -1,0 +1,8 @@
+/target/
+/dist/
+ui/bin/
+ui/obj/
+work/
+.wix/
+*.pdb
+build-errors.txt

@@ -1,0 +1,103 @@
+<Window
+    x:Class="DesktopLayoutManager.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DesktopLayoutManager.WinUI"
+    Title="桌面布局管理器">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Margin="24,20,24,12" ColumnSpacing="18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                <Border Width="42" Height="42" CornerRadius="12" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                    <FontIcon Glyph="&#xE8A9;" FontSize="21" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                </Border>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="桌面布局管理器" FontSize="22" FontWeight="SemiBold" />
+                    <TextBlock Text="安全预览、保存与整理桌面快捷方式" Opacity="0.72" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="操作模式" VerticalAlignment="Center" />
+                <ComboBox x:Name="ModeCombo" Width="174" SelectedIndex="0">
+                    <ComboBoxItem Content="仅快照" />
+                    <ComboBoxItem Content="仅补位" />
+                    <ComboBoxItem Content="快照 + 补位" />
+                </ComboBox>
+            </StackPanel>
+            <Button x:Name="ExecuteModeButton" Grid.Column="2" Content="执行所选模式" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center" Click="ExecuteMode_Click" />
+        </Grid>
+
+        <Border Grid.Row="1" Margin="24,0,24,14" Padding="12" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid ColumnSpacing="8" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="读取当前桌面" Click="Refresh_Click" />
+                <Button Grid.Column="1" Content="保存快照…" Click="SaveSnapshot_Click" />
+                <Button Grid.Column="2" Content="打开快照…" Click="OpenSnapshot_Click" />
+                <Button Grid.Column="3" Content="预览差异" Click="PreviewSnapshot_Click" />
+                <Button Grid.Column="4" Content="恢复布局…" Click="Restore_Click" />
+                <Button Grid.Row="1" Grid.Column="0" Content="预览补位" Click="PreviewFill_Click" />
+                <Button Grid.Row="1" Grid.Column="1" Content="执行补位…" Style="{StaticResource AccentButtonStyle}" Click="ExecuteFill_Click" />
+                <Button Grid.Row="1" Grid.Column="2" Content="撤销上次补位" Click="UndoFill_Click" />
+                <Button Grid.Row="1" Grid.Column="3" Content="导出列表…" Click="Export_Click" />
+                <TextBlock Grid.Row="1" Grid.Column="4" Text="仅移动可可靠识别的快捷方式" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.72" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Margin="24,0,24,12" CornerRadius="12" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid RowSpacing="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Padding="14,0" ColumnSpacing="12" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="180" /><ColumnDefinition Width="180" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="状态" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="桌面项目" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="2" Text="当前位置" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="3" Text="目标 / 快照位置" VerticalAlignment="Center" FontWeight="SemiBold" />
+                </Grid>
+                <ListView x:Name="IconList" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="False" Padding="4,0">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid MinHeight="42" Padding="10,4" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="180" /><ColumnDefinition Width="180" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Opacity="0.78" />
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" Text="{Binding Current}" VerticalAlignment="Center" FontFamily="Consolas" Opacity="0.82" />
+                                <TextBlock Grid.Column="3" Text="{Binding Target}" VerticalAlignment="Center" FontFamily="Consolas" Opacity="0.82" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" Margin="24,0,24,18" Padding="12,9" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+            <TextBlock x:Name="StatusText" Text="正在读取桌面…" TextTrimming="CharacterEllipsis" />
+        </Border>
+    </Grid>
+</Window>

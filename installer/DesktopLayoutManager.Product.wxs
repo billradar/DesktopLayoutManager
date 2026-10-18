@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Desktop Layout Manager"
+      Manufacturer="Desktop Layout Manager"
+      Version="$(var.ProductVersion)"
+      UpgradeCode="{8437D4BA-A4FD-4B1A-AF4C-6F9F77C7AA35}"
+      Scope="perMachine"
+      InstallerVersion="500">
+
+    <SummaryInformation Description="Desktop Layout Manager" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Desktop Layout Manager is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="DesktopLayoutManagerIcon" SourceFile="!(bindpath.repo)\assets\DesktopLayoutManager.ico" />
+    <Property Id="ARPPRODUCTICON" Value="DesktopLayoutManagerIcon" />
+    <Feature Id="Application" Title="Desktop Layout Manager" Level="1">
+      <Files Include="!(bindpath.publish)\**" Directory="INSTALLFOLDER" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Desktop Layout Manager" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ProgramMenuProductFolder" Name="Desktop Layout Manager" />
+    </StandardDirectory>
+
+    <DirectoryRef Id="ProgramMenuProductFolder">
+      <Component Id="StartMenuShortcut" Guid="*">
+        <Shortcut
+            Id="StartMenuShortcut"
+            Name="Desktop Layout Manager"
+            Target="[INSTALLFOLDER]DesktopLayoutManager.exe"
+            WorkingDirectory="INSTALLFOLDER"
+            Icon="DesktopLayoutManagerIcon" />
+        <RemoveFolder Id="RemoveStartMenuProductFolder" On="uninstall" />
+        <RegistryValue Root="HKLM" Key="Software\DesktopLayoutManager" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="*">
+        <Shortcut
+            Id="DesktopShortcut"
+            Name="Desktop Layout Manager"
+            Target="[INSTALLFOLDER]DesktopLayoutManager.exe"
+            WorkingDirectory="INSTALLFOLDER"
+            Icon="DesktopLayoutManagerIcon" />
+        <RegistryValue Root="HKLM" Key="Software\DesktopLayoutManager" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+  </Package>
+</Wix>

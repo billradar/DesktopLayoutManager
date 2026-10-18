@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Bundle
+      Name="Desktop Layout Manager Setup"
+      Manufacturer="Desktop Layout Manager"
+      Version="$(var.ProductVersion)"
+      UpgradeCode="{3CBB5CE0-EBB1-4C11-95F1-92D241D531A5}"
+      IconSourceFile="!(bindpath.repo)\assets\DesktopLayoutManager.ico"
+      Compressed="yes">
+
+    <Variable Name="VcRedistInstalledNumber" Type="numeric" Value="0" />
+    <Variable Name="VcRedistMajorNumber" Type="numeric" Value="0" />
+    <Variable Name="VcRedistMinorNumber" Type="numeric" Value="0" />
+    <Variable Name="VcRedistBuildNumber" Type="numeric" Value="0" />
+    <Variable Name="VcRedistRevisionNumber" Type="numeric" Value="0" />
+
+    <util:RegistrySearch
+        Id="VcRedistInstalled"
+        Variable="VcRedistInstalled"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+        Value="Installed"
+        Result="value"
+        Bitness="always64" />
+    <SetVariable
+        Id="VcRedistInstalledNumber"
+        Variable="VcRedistInstalledNumber"
+        Value="[VcRedistInstalled]"
+        Type="numeric"
+        After="VcRedistInstalled"
+        Condition="VcRedistInstalled = &quot;1&quot;" />
+    <util:RegistrySearch
+        Id="VcRedistMajor"
+        Variable="VcRedistMajor"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+        Value="Major"
+        Result="value"
+        After="VcRedistInstalledNumber"
+        Condition="VcRedistInstalledNumber = 1"
+        Bitness="always64" />
+    <util:RegistrySearch
+        Id="VcRedistMinor"
+        Variable="VcRedistMinor"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+        Value="Minor"
+        Result="value"
+        After="VcRedistMajor"
+        Condition="VcRedistInstalledNumber = 1"
+        Bitness="always64" />
+    <util:RegistrySearch
+        Id="VcRedistBuild"
+        Variable="VcRedistBuild"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+        Value="Bld"
+        Result="value"
+        After="VcRedistMinor"
+        Condition="VcRedistInstalledNumber = 1"
+        Bitness="always64" />
+    <util:RegistrySearch
+        Id="VcRedistRevision"
+        Variable="VcRedistRevision"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+        Value="Rbld"
+        Result="value"
+        After="VcRedistBuild"
+        Condition="VcRedistInstalledNumber = 1"
+        Bitness="always64" />
+
+    <SetVariable
+        Id="VcRedistMajorNumber"
+        Variable="VcRedistMajorNumber"
+        Value="[VcRedistMajor]"
+        Type="numeric"
+        After="VcRedistRevision"
+        Condition="VcRedistInstalledNumber = 1" />
+    <SetVariable
+        Id="VcRedistMinorNumber"
+        Variable="VcRedistMinorNumber"
+        Value="[VcRedistMinor]"
+        Type="numeric"
+        After="VcRedistRevision"
+        Condition="VcRedistInstalledNumber = 1" />
+    <SetVariable
+        Id="VcRedistBuildNumber"
+        Variable="VcRedistBuildNumber"
+        Value="[VcRedistBuild]"
+        Type="numeric"
+        After="VcRedistRevision"
+        Condition="VcRedistInstalledNumber = 1" />
+    <SetVariable
+        Id="VcRedistRevisionNumber"
+        Variable="VcRedistRevisionNumber"
+        Value="[VcRedistRevision]"
+        Type="numeric"
+        After="VcRedistRevision"
+        Condition="VcRedistInstalledNumber = 1" />
+
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" LicenseUrl="" />
+    </BootstrapperApplication>
+
+    <Chain>
+      <ExePackage
+          Id="VcRedistX64"
+          DisplayName="Microsoft Visual C++ Redistributable (x64)"
+          SourceFile="!(bindpath.payloads)\vc_redist.x64.exe"
+          InstallArguments="/install /quiet /norestart"
+          DetectCondition="$(var.VcRedistDetectCondition)"
+          Permanent="yes"
+          Vital="yes"
+          PerMachine="yes" />
+
+      <!-- Microsoft documents this installer as the supported runtime detector/deployer:
+           it checks all required MSIX packages and skips deployment when they are present. -->
+      <ExePackage
+          Id="WindowsAppRuntimeX64"
+          DisplayName="Windows App SDK Runtime 2.5.1 (x64)"
+          SourceFile="!(bindpath.payloads)\WindowsAppRuntimeInstall-x64.exe"
+          InstallArguments="--quiet"
+          Permanent="yes"
+          Vital="yes"
+          PerMachine="yes" />
+
+      <MsiPackage
+          Id="DesktopLayoutManagerMsi"
+          DisplayName="Desktop Layout Manager"
+          SourceFile="!(bindpath.msi)\DesktopLayoutManager.msi"
+          Vital="yes" />
+    </Chain>
+  </Bundle>
+</Wix>
