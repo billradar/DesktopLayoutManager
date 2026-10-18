@@ -23,7 +23,7 @@
 
 请前往 [GitHub Actions](https://github.com/billradar/DesktopLayoutManager-rust/actions) 查看自动构建记录；正式版本发布后，可在 [Releases](https://github.com/billradar/DesktopLayoutManager-rust/releases) 获取对应文件。
 
-Windows x64 发布包为 ZIP 格式。解压后，请将 `DesktopLayoutManager.exe` 与 `desktop_layout_manager.dll` 保持在同一目录，再运行 EXE。
+Windows x64 Release 仅附带 `DesktopLayoutManager.exe` 和 `SHA256SUMS.txt`。GitHub 会自动提供源码 ZIP 和 TAR.GZ 压缩包，不额外上传应用 ZIP 或 DLL。
 
 ## 从源码构建
 
@@ -41,7 +41,7 @@ Windows x64 发布包为 ZIP 格式。解压后，请将 `DesktopLayoutManager.e
 
 - **CI（持续集成）**：代码推送或相关 PR 会触发 Windows x64 构建，并运行 Rust 核心测试。查看 [CI 工作流](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/native-win32.yml)。
 - **CD（发布）**：推送以 `v` 开头的版本标签（例如 `v0.1.0`）会触发构建和 GitHub Release；也可在 Actions 页面手动运行发布工作流并填写版本号。查看 [Release 工作流](https://github.com/billradar/DesktopLayoutManager-rust/actions/workflows/release.yml)。
-- **发布文件**：包含 Windows x64 ZIP 包、EXE、Rust 核心 DLL 和 SHA-256 校验文件。
+- **发布文件**：仅上传 `DesktopLayoutManager.exe` 与 `SHA256SUMS.txt`；源码 ZIP 和 TAR.GZ 由 GitHub 自动提供。
 
 ## 项目状态
 
